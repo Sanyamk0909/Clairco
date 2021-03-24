@@ -3,10 +3,11 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-
+//const browser = require('./routes/browser')
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
-
+//const browserPromise = require('./routes/browser');
+const puppeteer = require("puppeteer");
 var app = express();
 
 // view engine setup
@@ -19,7 +20,50 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
+app.use('/',async(req, res)=>{try {
+  let browserPromise = await puppeteer.launch({
+    headless: false, 
+    args: ['--no-sandbox'],
+    devtools: true,
+    ignoreHTTPSErrors: true,
+    // defaultViewport: {
+    //     width: 375,
+    //     height: 667,
+    //     isMobile: true,
+    // },
+    timeout: 0,
+});
+  console.log("brower launched");
+
+  const page = await browserPromise.newPage();
+  
+ 
+  await page.goto("https://medium.com/tag/javascript/latest", {
+     waitUntil: "networkidle0",
+  });
+  console.log(page.url());
+
+
+
+
+
+  //Navigate to Following page
+  let blogs = await page.evaluate(() => {
+    let names = document.getElementsByClassName('ds-link ds-link--styleSubtle link link--darken link--accent u-accentColor--textNormal u-accentColor--textDarken');
+    let titles = document.getElementsByClassName('graf graf--h3 graf-after--figure graf--title');
+    let blogs = [ ];
+    for(let i = 0 ; i < titles.length;  ++i){
+      blogs.push({'title': titles[i].textContent, 'name' : names[i].text});}
+      return blogs;
+  });
+ 
+  res.send(blogs)
+} catch (e) {
+  console.log(e);
+  res.send('fail');
+}
+
+});
 app.use('/users', usersRouter);
 
 // catch 404 and forward to error handler

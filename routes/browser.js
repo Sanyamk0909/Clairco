@@ -1,7 +1,7 @@
 const puppeteer = require("puppeteer");
 
 let browserPromise = puppeteer.launch({
-    headless: true, 
+    headless: false, 
     args: ['--no-sandbox'],
     devtools: true,
     ignoreHTTPSErrors: true,
@@ -12,3 +12,5 @@ let browserPromise = puppeteer.launch({
     },
     timeout: 0,
 });
+
+module.exports = browserPromise;
